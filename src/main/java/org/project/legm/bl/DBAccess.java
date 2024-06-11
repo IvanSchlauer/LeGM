@@ -7,6 +7,7 @@ import org.project.legm.db.*;
 import org.project.legm.dbpojos.*;
 import org.springframework.stereotype.Component;
 
+import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,11 +35,10 @@ public class DBAccess {
         //TODO: Find working Countries API
         //countryRepo.saveAll(gmService.fetchCountries());
         //teamRepo.saveAll(gmService.fetchTeams());
-        //playerRepo.saveAll(gService.fetchPlayers());
+        //playerRepo.saveAll(gmService.fetchPlayers());
         //playerTeamRepo.saveAll(gmService.getPlayerTeamList());
         //gameRepo.saveAll(gmService.fetchGames());
         //gamePlayerRepo.saveAll(gmService.fetchGamePlayers());
-
     }
 
     public void getTeamGamesAndGamePlayers(Team team){
@@ -63,6 +63,14 @@ public class DBAccess {
 
     public Optional<List<Team>> getAllTeams(){
         return Optional.ofNullable(teamRepo.getTeams()).filter(list -> !list.isEmpty());
+    }
+
+    public Optional<Player> getPlayerById(Long playerID){
+        return playerRepo.findById(playerID);
+    }
+
+    public Optional<List<Player>> getPlayersOfTeam(Long teamID){
+        return Optional.ofNullable(playerRepo.getPlayersOfTeam(teamID)).filter(list -> !list.isEmpty());
     }
 
 }
