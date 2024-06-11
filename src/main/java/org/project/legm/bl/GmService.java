@@ -1,7 +1,6 @@
 package org.project.legm.bl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -9,6 +8,8 @@ import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.project.legm.db.GameRepository;
+import org.project.legm.db.PlayerRepository;
 import org.project.legm.db.TeamRepository;
 import org.project.legm.dbpojos.*;
 import org.project.legm.pojos.Position;
@@ -20,7 +21,6 @@ import java.io.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Project: LeGM
@@ -31,53 +31,37 @@ import java.util.stream.Collectors;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class TeamService {
-    private final TeamRepository teamRepository;
+public class GmService {
+    private final TeamRepository teamRepo;
+    private final PlayerRepository playerRepo;
+    private final GameRepository gameRepo;
     private final WebClientConfig webClientConfig;
 
     private WebClient webClient;
-    private Map<String, Long> teamIdMap;
-    @PostConstruct
-    public void initClient(){
-        this.webClient = webClientConfig.getHighLoadWebClient();
-        InputStream is;
-        try {
-            is = new FileInputStream(new File("src/main/resources/teamid.txt"));
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
 
-        this.teamIdMap = new BufferedReader(new InputStreamReader(is)).lines()
-                .map(line-> line.split(";"))
-                .collect(Collectors.toMap(
-                        parts -> parts[1],
-                        parts -> Long.parseLong(parts[0])
-                ));
+    @PostConstruct
+    public void initClient() {
+        this.webClient = webClientConfig.getHighLoadWebClient();
     }
 
     private final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 
-    private List<Team> teamList = new ArrayList<>();
-    private List<Country> countryList = new ArrayList<>();
-    private List<Player> playerList = new ArrayList<>();
-    private List<Game> gamesList = new ArrayList<>();
+    private final List<Team> teamList = new ArrayList<>();
+    private final List<Country> countryList = new ArrayList<>();
+    private final List<Player> playerList = new ArrayList<>();
+    private final List<Game> gamesList = new ArrayList<>();
+    private final List<GamePlayer> gamePlayerList = new ArrayList<>();
     @Getter
-    private List<PlayerTeam> playerTeamList = new ArrayList<>();
-
-    private final String teamEastUri = "https://api-nba-v1.p.rapidapi.com/teams?conference=East";
-    private final String teamWestUri = "https://api-nba-v1.p.rapidapi.com/teams?conference=West";
-    private final String countryUri = "https://restcountries.com/v3.1/all";
-    private final String playerUri = "https://api-nba-v1.p.rapidapi.com/players?season=2023&team=";
-    private final String gamesUri = "https://api-nba-v1.p.rapidapi.com/games?season=2023";
-    private final String statisticsUri = "https://api-nba-v1.p.rapidapi.com/players/statistics?season=2023&id=";
+    private final List<PlayerTeam> playerTeamList = new ArrayList<>();
 
     private final String host = "api-nba-v1.p.rapidapi.com";
     private final String apiKey = "49d56d91d9msh30c88cca5bff686p16e614jsn5e9b7e5a986e";
 
-    public List<Country> fetchCountries() {
+    /*public List<Country> fetchCountries() {
         log.info("Accessing Countries API Endpoint");
+        String countryUri = "https://restcountries.com/v3.1/all";
         Mono<String> responseTeams = webClient.get()
                 .uri(countryUri)
                 .retrieve()
@@ -98,17 +82,19 @@ public class TeamService {
             throw new RuntimeException(e);
         }
         return countryList;
-    }
+    }*/
 
     public List<Team> fetchTeams() {
         log.info("Accessing Teams API Endpoint");
         List<Mono<String>> responseList = new ArrayList<>();
+        String teamEastUri = "https://api-nba-v1.p.rapidapi.com/teams?conference=East";
         Mono<String> responseEastTeams = webClient.get()
                 .uri(teamEastUri)
                 .header("X-RapidAPI-Host", host)
                 .header("X-RapidAPI-Key", apiKey)
                 .retrieve()
                 .bodyToMono(String.class);
+        String teamWestUri = "https://api-nba-v1.p.rapidapi.com/teams?conference=West";
         Mono<String> responseWestTeams = webClient.get()
                 .uri(teamWestUri)
                 .header("X-RapidAPI-Host", host)
@@ -119,7 +105,7 @@ public class TeamService {
         responseList.add(responseWestTeams);
         log.info("Finished Teams API Access");
 
-        for (Mono<String> responseTeam : responseList){
+        for (Mono<String> responseTeam : responseList) {
             try {
                 JsonNode rootNode = mapper.readTree(responseTeam.block());
                 JsonNode responseNode = rootNode.get("response");
@@ -136,9 +122,8 @@ public class TeamService {
                         Team nodeTeam = new Team(id, name, code, city, logoUrl,
                                 0.0, 0.0, 0, 0, 0,
                                 new ArrayList<>(), new ArrayList<>());
-                        log.info("Team " + nodeTeam.getTeamID() + " :" + nodeTeam.getName());
-                        log.info("Nba Franchise: " + nbaFranchise);
-                        if (nbaFranchise){
+                        //log.info("Team " + nodeTeam.getTeamID() + " :" + nodeTeam.getName());
+                        if (nbaFranchise) {
                             teamList.add(nodeTeam);
                         }
                         //log.info("Team object: " + nodeTeam);
@@ -155,10 +140,12 @@ public class TeamService {
     public List<Player> fetchPlayers() {
         int rateLimit = 0;
         //log.info("All Teams: " + teamList.stream().map(Team::getTeamID).toList());
-        for (Team team : teamList) {
+        List<Team> lTeamList = teamRepo.findAll();
+        for (Team team : lTeamList) {
             //log.info("Accessing Players API with Team: " + team.getTeamID());
-            while (rateLimit <= 0) {
+            while (rateLimit < 1) {
                 log.info("Accessing Players API");
+                String playerUri = "https://api-nba-v1.p.rapidapi.com/players?season=2023&team=";
                 Mono<String> responsePlayers = webClient.get()
                         .uri(playerUri + team.getTeamID())
                         .header("X-RapidAPI-Host", host)
@@ -182,7 +169,7 @@ public class TeamService {
                             Double weightPounds = itemNode.get("weight").get("pounds").asDouble();
                             String college = itemNode.get("college").asText();
 
-                            if ( birthdate == null || birthdate.equals("null")){
+                            if (birthdate == null || birthdate.equals("null")) {
                                 birthdate = "0404-04-04";
                             }
 
@@ -193,7 +180,7 @@ public class TeamService {
                             InputStream is;
 
 
-                            PlayerTeam nodePlayerTeam = new PlayerTeam(id, LocalDate.now(), nodePlayer.getPlayerId(),null);
+                            PlayerTeam nodePlayerTeam = new PlayerTeam(team.getTeamID(), LocalDate.of(2023, 1, 1), nodePlayer.getPlayerId(), null);
                             //log.info("nodePlayer: " + nodePlayer);
                             //log.info("nodePlayerTeam: " + nodePlayerTeam);
                             playerList.add(nodePlayer);
@@ -212,8 +199,9 @@ public class TeamService {
         return playerList;
     }
 
-    public List<Game> fetchGames(){
+    public List<Game> fetchGames() {
         log.info("Accessing Games API Endpoint");
+        String gamesUri = "https://api-nba-v1.p.rapidapi.com/games?season=2023";
         Mono<String> responseTeams = webClient.get()
                 .uri(gamesUri)
                 .header("X-RapidAPI-Host", host)
@@ -233,13 +221,13 @@ public class TeamService {
                     Long awayTeamId = itemNode.get("teams").get("visitors").get("id").asLong();
                     Long homeTeamId = itemNode.get("teams").get("home").get("id").asLong();
 
-                    log.info("Away ID: " + awayTeamId);
-                    log.info("Home ID: " + homeTeamId);
+                    //log.info("Away ID: " + awayTeamId);
+                    //log.info("Home ID: " + homeTeamId);
 
-                    Optional<Team> awayTeam = teamRepository.findById(awayTeamId);
-                    Optional<Team> homeTeam = teamRepository.findById(homeTeamId);
+                    Optional<Team> awayTeam = teamRepo.findById(awayTeamId);
+                    Optional<Team> homeTeam = teamRepo.findById(homeTeamId);
 
-                    if (awayTeam.isPresent() && homeTeam.isPresent()){
+                    if (awayTeam.isPresent() && homeTeam.isPresent()) {
                         Game nodeGame = new Game(id, awayTeam.get(), homeTeam.get(), LocalDate.parse(date, DTF), location, new ArrayList<>());
                         gamesList.add(nodeGame);
                     }
@@ -252,29 +240,59 @@ public class TeamService {
         return gamesList;
     }
 
-    public List<GamePlayer> fetchGamePlayers (){
-        for (Player player : playerList){
-            log.info("Accessing statistics endpoint");
-            Mono<String> responseTeams = webClient.get()
-                    .uri(statisticsUri + player.getPlayerId())
-                    .header("X-RapidAPI-Host", host)
-                    .header("X-RapidAPI-Key", apiKey)
-                    .retrieve()
-                    .bodyToMono(String.class);
+    public List<GamePlayer> fetchGamePlayers() {
+        int rateLimit = 0;
+        List<Player> lPlayerList = playerRepo.findAll();
+        for (Player player : lPlayerList) {
+            if (rateLimit < 6) {
+                log.info("Accessing statistics endpoint for Player: " + player.getFirstName() + " " + player.getPlayerId());
+                String statisticsUri = "https://api-nba-v1.p.rapidapi.com/players/statistics?season=2023&id=";
+                Mono<String> responseTeams = webClient.get()
+                        .uri(statisticsUri + player.getPlayerId())
+                        .header("X-RapidAPI-Host", host)
+                        .header("X-RapidAPI-Key", apiKey)
+                        .retrieve()
+                        .bodyToMono(String.class);
 
-            try {
-                JsonNode rootNode = mapper.readTree(responseTeams.block());
-                log.info("Finished statistics API Access");
-                JsonNode responseNode = rootNode.get("response");
-                if (responseNode.isArray()) {
-                    for (JsonNode itemNode : responseNode) {
-                        //TODO den scheiß oida
+                try {
+                    JsonNode rootNode = mapper.readTree(responseTeams.block());
+                    log.info("Finished statistics API Access");
+                    JsonNode responseNode = rootNode.get("response");
+                    if (responseNode.isArray()) {
+                        for (JsonNode itemNode : responseNode) {
+                            Long gameID = itemNode.get("game").get("id").asLong();
+                            Double min = itemNode.get("min").asDouble();
+                            Double pts = itemNode.get("points").asDouble();
+                            Double ast = itemNode.get("assists").asDouble();
+                            Double oreb = itemNode.get("offReb").asDouble();
+                            Double dreb = itemNode.get("defReb").asDouble();
+                            Double stl = itemNode.get("steals").asDouble();
+                            Double turno = itemNode.get("turnovers").asDouble();
+                            Double fga = itemNode.get("fga").asDouble();
+                            Double fgm = itemNode.get("fgm").asDouble();
+                            Double threepa = itemNode.get("tpa").asDouble();
+                            Double threepm = itemNode.get("tpm").asDouble();
+                            Double fta = itemNode.get("fta").asDouble();
+                            Double ftm = itemNode.get("ftm").asDouble();
+
+                            Optional<Game> game = gameRepo.findById(gameID);
+
+                            if (game.isPresent()) {
+                                GamePlayer gp = new GamePlayer(null, min, pts, ast, oreb, dreb, stl, turno, fga, fgm,
+                                        threepa, threepm, fta, ftm, player, game.get());
+                                //log.info("Gameplayer: " + gp);
+                                gamePlayerList.add(gp);
+                            }
+                        }
                     }
+                    Thread.sleep(3000);
+                } catch (JsonProcessingException | NoSuchElementException | InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
-            } catch (JsonProcessingException | NoSuchElementException e) {
-                throw new RuntimeException(e);
+
+                rateLimit++;
             }
         }
-        return null;
+        return gamePlayerList;
     }
 }

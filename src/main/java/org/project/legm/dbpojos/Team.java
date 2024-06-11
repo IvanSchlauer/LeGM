@@ -1,5 +1,6 @@
 package org.project.legm.dbpojos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -33,14 +34,16 @@ public class Team {
     private Double offRating;
     @Column(name = "def_rating")
     private Double defRating;
-    private int coachingLvl;
-    private int medicalLvl;
-    private int scoutingLvl;
+    private Integer coachingLvl;
+    private Integer medicalLvl;
+    private Integer scoutingLvl;
 
     @OneToMany(mappedBy = "awayTeam")
     @ToString.Exclude
+    @JsonIgnore
     private List<Game> awayGameList = new ArrayList<>();
     @OneToMany(mappedBy = "homeTeam")
     @ToString.Exclude
+    @JsonIgnore
     private List<Game> homeGameList = new ArrayList<>();
 }

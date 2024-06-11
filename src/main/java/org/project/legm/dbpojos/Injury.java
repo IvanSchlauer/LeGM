@@ -22,5 +22,5 @@ public class Injury {
     private Long injuryID;
 
     private String description;
-    private int length;
+    private Integer length;
 }

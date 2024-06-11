@@ -1,5 +1,6 @@
 package org.project.legm.dbpojos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.project.legm.pojos.Position;
@@ -31,20 +32,20 @@ public class Player {
     private LocalDate birthdate;
     private Double height;
     private Double weight;
-    private int handles;
-    private int passing;
-    private int rebounding;
-    @Column(name = "three_pointer")
-    private int threePointer;
+    private Integer handles;
+    private Integer passing;
+    private Integer rebounding;
+    @Column(name = "three_poIntegerer")
+    private Integer threePoIntegerer;
     @Column(name = "mid_range")
-    private int midRange;
-    private int post;
-    private int finishing;
-    private int speed;
-    private int stamina;
-    private int offIQ;
-    private int defIQ;
-    private int intangibles;
+    private Integer midRange;
+    private Integer post;
+    private Integer finishing;
+    private Integer speed;
+    private Integer stamina;
+    private Integer offIQ;
+    private Integer defIQ;
+    private Integer Integerangibles;
     private Position position;
     private String college;
 
@@ -59,6 +60,7 @@ public class Player {
     private List<PlayerTeam> playerTeamList = new ArrayList<>();*/
     @OneToMany(mappedBy = "player", fetch = FetchType.EAGER)
     @ToString.Exclude
+    @JsonIgnore
     private List<GamePlayer> gamesPlayedList = new ArrayList<>();
 
 

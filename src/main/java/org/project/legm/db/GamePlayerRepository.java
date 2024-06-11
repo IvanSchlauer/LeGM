@@ -15,4 +15,14 @@ import java.util.List;
 public interface GamePlayerRepository extends JpaRepository<GamePlayer, Long> {
     @Query("SELECT gp FROM game_player gp WHERE gp.game.gameID = :gameID")
     public List<GamePlayer> getGamePlayersByGame(Long gameID);
+
+    @Query("SELECT gp\n" +
+            "FROM game_player gp\n" +
+            "WHERE gp.player.playerId = :playerID")
+    public List<GamePlayer> getGamePlayerByPlayer(Long playerID);
+
+    @Query("SELECT SUM(gp.pts)/COUNT(gp.pts)\n" +
+            "FROM game_player gp\n" +
+            "WHERE gp.player.playerId = :playerID")
+    public Double getCareerAvgPts(Long playerID);
 }

@@ -1,5 +1,6 @@
 package org.project.legm.dbpojos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,23 +22,27 @@ public class GamePlayer {
     @Column(name = "gameplayer_id")
     private Long gamePlayerID;
 
-    @Column(name = "score_position")
-    private int scorePosition;
-    private int pts;
-    private int ast;
-    private int oreb;
-    private int dreb;
-    private int stl;
-    private int turno;
-    private int fga;
-    private int fgm;
-    private int threepa;
-    private int threepm;
-    private int fta;
-    private int ftm;
+    private Double minute;
+    private Double pts;
+    private Double ast;
+    private Double oreb;
+    private Double dreb;
+    private Double stl;
+    private Double turno;
+    private Double fga;
+    private Double fgm;
+    private Double threepa;
+    private Double threepm;
+    private Double fta;
+    private Double ftm;
+
 
     @ManyToOne
+    @JoinColumn(name = "player_id")
+    @JsonIgnore
     private Player player;
     @ManyToOne
+    @JoinColumn(name = "game_id")
+    @JsonIgnore
     private Game game;
 }

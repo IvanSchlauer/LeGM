@@ -1,5 +1,6 @@
 package org.project.legm.dbpojos;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,7 +23,6 @@ import java.util.List;
 @Data
 public class Game {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(name = "game_id")
     private Long gameID;
 
@@ -38,5 +38,6 @@ public class Game {
 
     @OneToMany(mappedBy = "game", fetch = FetchType.EAGER)
     @ToString.Exclude
+    @JsonIgnore
     private List<GamePlayer> gamePlayerList = new ArrayList<>();
 }
