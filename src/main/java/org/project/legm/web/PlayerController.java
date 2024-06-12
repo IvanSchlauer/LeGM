@@ -25,7 +25,20 @@ import java.util.List;
 public class PlayerController {
     private final DBAccess dbAccess;
 
-    private ResponseEntity<List<Player>> getPlayersOfTeam(){
-        return null;
+    @GetMapping
+    private ResponseEntity<List<Player>> getPlayersOfTeam
+            (@RequestParam(name = "team") Long teamID){
+        Optional<List<Player>> playerList = dbAccess.getPlayersOfTeam(teamID);
+        return dbAccess.getPlayersOfTeam(teamID)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(404).build());
+    }
+
+    @GetMapping("/byId")
+    private ResponseEntity<Player> getPlayerByID
+            (@RequestParam(name = "id") Long playerID){
+        return dbAccess.getPlayerById(playerID)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(404).build());
     }
 }

@@ -35,8 +35,8 @@ public class Player {
     private Integer handles;
     private Integer passing;
     private Integer rebounding;
-    @Column(name = "three_poIntegerer")
-    private Integer threePoIntegerer;
+    @Column(name = "three_pointer")
+    private Integer threePointer;
     @Column(name = "mid_range")
     private Integer midRange;
     private Integer post;
@@ -45,7 +45,7 @@ public class Player {
     private Integer stamina;
     private Integer offIQ;
     private Integer defIQ;
-    private Integer Integerangibles;
+    private Integer Intangibles;
     private Position position;
     private String college;
 

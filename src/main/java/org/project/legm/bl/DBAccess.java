@@ -1,11 +1,11 @@
 package org.project.legm.bl;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.project.legm.db.*;
 import org.project.legm.dbpojos.*;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,17 +33,12 @@ public class DBAccess {
     public Boolean initSave(GmUser gmUser){
         //TODO: Find working Countries API
         //countryRepo.saveAll(gmService.fetchCountries());
-        try {
-            gmUser = gmUserRepo.save(gmUser);
-            teamRepo.saveAll(gmService.fetchTeams(gmUser));
-            playerRepo.saveAll(gmService.fetchPlayers(gmUser));
-            playerTeamRepo.saveAll(gmService.getPlayerTeamList());
-            gameRepo.saveAll(gmService.fetchGames(gmUser));
-            gamePlayerRepo.saveAll(gmService.fetchGamePlayers());
-        } catch (WebClientResponseException e){
-            return false;
-        }
-        return true;
+        //teamRepo.saveAll(gmService.fetchTeams());
+        //playerRepo.saveAll(gService.fetchPlayers());
+        //playerTeamRepo.saveAll(gmService.getPlayerTeamList());
+        //gameRepo.saveAll(gmService.fetchGames());
+        //gamePlayerRepo.saveAll(gmService.fetchGamePlayers());
+
     }
 
     public void getTeamGamesAndGamePlayers(Team team){
@@ -68,6 +63,14 @@ public class DBAccess {
 
     public Optional<List<Team>> getAllTeams(){
         return Optional.ofNullable(teamRepo.getTeams()).filter(list -> !list.isEmpty());
+    }
+
+    public Optional<Player> getPlayerById(Long playerID){
+        return playerRepo.findById(playerID);
+    }
+
+    public Optional<List<Player>> getPlayersOfTeam(Long teamID){
+        return Optional.ofNullable(playerRepo.getPlayersOfTeam(teamID)).filter(list -> !list.isEmpty());
     }
 
 }
