@@ -1,11 +1,11 @@
 package org.project.legm.bl;
 
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.project.legm.db.*;
 import org.project.legm.dbpojos.*;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +21,7 @@ import java.util.Optional;
 @Slf4j
 public class DBAccess {
     private final CountryRepository countryRepo;
+    private final GmUserRepository gmUserRepo;
     private final GamePlayerRepository gamePlayerRepo;
     private final GameRepository gameRepo;
     private final InjuryRepository injuryRepo;
@@ -29,16 +30,20 @@ public class DBAccess {
     private final TeamRepository teamRepo;
     private final GmService gmService;
 
-    @PostConstruct
-    private void init(){
+    public Boolean initSave(GmUser gmUser){
         //TODO: Find working Countries API
         //countryRepo.saveAll(gmService.fetchCountries());
-        //teamRepo.saveAll(gmService.fetchTeams());
-        //playerRepo.saveAll(gService.fetchPlayers());
-        //playerTeamRepo.saveAll(gmService.getPlayerTeamList());
-        //gameRepo.saveAll(gmService.fetchGames());
-        //gamePlayerRepo.saveAll(gmService.fetchGamePlayers());
-
+        try {
+            gmUser = gmUserRepo.save(gmUser);
+            teamRepo.saveAll(gmService.fetchTeams(gmUser));
+            playerRepo.saveAll(gmService.fetchPlayers(gmUser));
+            playerTeamRepo.saveAll(gmService.getPlayerTeamList());
+            gameRepo.saveAll(gmService.fetchGames(gmUser));
+            gamePlayerRepo.saveAll(gmService.fetchGamePlayers());
+        } catch (WebClientResponseException e){
+            return false;
+        }
+        return true;
     }
 
     public void getTeamGamesAndGamePlayers(Team team){

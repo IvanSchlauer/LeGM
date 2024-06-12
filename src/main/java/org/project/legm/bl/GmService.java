@@ -8,7 +8,9 @@ import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.User;
 import org.project.legm.db.GameRepository;
+import org.project.legm.db.GmUserRepository;
 import org.project.legm.db.PlayerRepository;
 import org.project.legm.db.TeamRepository;
 import org.project.legm.dbpojos.*;
@@ -32,6 +34,7 @@ import java.util.*;
 @Slf4j
 @RequiredArgsConstructor
 public class GmService {
+    private final GmUserRepository gmUserRepo;
     private final TeamRepository teamRepo;
     private final PlayerRepository playerRepo;
     private final GameRepository gameRepo;
@@ -57,34 +60,9 @@ public class GmService {
     private final List<PlayerTeam> playerTeamList = new ArrayList<>();
 
     private final String host = "api-nba-v1.p.rapidapi.com";
-    private final String apiKey = "49d56d91d9msh30c88cca5bff686p16e614jsn5e9b7e5a986e";
+    private final String apiKey = "4586bc71c3mshe11dd4e50c5c982p190748jsnaa79f581dbb7";
 
-    /*public List<Country> fetchCountries() {
-        log.info("Accessing Countries API Endpoint");
-        String countryUri = "https://restcountries.com/v3.1/all";
-        Mono<String> responseTeams = webClient.get()
-                .uri(countryUri)
-                .retrieve()
-                .bodyToMono(String.class);
-
-        try {
-            JsonNode rootNode = mapper.readTree(responseTeams.block());
-            log.info("Finished Countries API Access");
-            JsonNode responseNode = rootNode.get("response");
-            if (responseNode.isArray()) {
-                for (JsonNode itemNode : responseNode) {
-                    String name = itemNode.get("name").get("common").asText();
-                    Country nodeCountry = new Country(null, name);
-                    countryList.add(nodeCountry);
-                }
-            }
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        return countryList;
-    }*/
-
-    public List<Team> fetchTeams() {
+    public List<Team> fetchTeams(GmUser gmUser) {
         log.info("Accessing Teams API Endpoint");
         List<Mono<String>> responseList = new ArrayList<>();
         String teamEastUri = "https://api-nba-v1.p.rapidapi.com/teams?conference=East";
@@ -119,11 +97,11 @@ public class GmService {
                         Boolean nbaFranchise = itemNode.get("nbaFranchise").asBoolean();
                         //log.info("TeamID after: " + id);
 
-                        Team nodeTeam = new Team(id, name, code, city, logoUrl,
+                        Team nodeTeam = new Team(id, gmUser.getUserID(), name, code, city, logoUrl,
                                 0.0, 0.0, 0, 0, 0,
                                 new ArrayList<>(), new ArrayList<>());
                         //log.info("Team " + nodeTeam.getTeamID() + " :" + nodeTeam.getName());
-                        if (nbaFranchise) {
+                        if (nbaFranchise && !code.equals("SAS")) {
                             teamList.add(nodeTeam);
                         }
                         //log.info("Team object: " + nodeTeam);
@@ -137,7 +115,7 @@ public class GmService {
         return teamList;
     }
 
-    public List<Player> fetchPlayers() {
+    public List<Player> fetchPlayers(GmUser gmUser) {
         int rateLimit = 0;
         //log.info("All Teams: " + teamList.stream().map(Team::getTeamID).toList());
         List<Team> lTeamList = teamRepo.findAll();
@@ -199,7 +177,7 @@ public class GmService {
         return playerList;
     }
 
-    public List<Game> fetchGames() {
+    public List<Game> fetchGames(GmUser gmUser) {
         log.info("Accessing Games API Endpoint");
         String gamesUri = "https://api-nba-v1.p.rapidapi.com/games?season=2023";
         Mono<String> responseTeams = webClient.get()
@@ -224,8 +202,8 @@ public class GmService {
                     //log.info("Away ID: " + awayTeamId);
                     //log.info("Home ID: " + homeTeamId);
 
-                    Optional<Team> awayTeam = teamRepo.findById(awayTeamId);
-                    Optional<Team> homeTeam = teamRepo.findById(homeTeamId);
+                    Optional<Team> awayTeam = teamRepo.findById(new TeamKey(awayTeamId, gmUser.getUserID()));
+                    Optional<Team> homeTeam = teamRepo.findById(new TeamKey(homeTeamId, gmUser.getUserID()));
 
                     if (awayTeam.isPresent() && homeTeam.isPresent()) {
                         Game nodeGame = new Game(id, awayTeam.get(), homeTeam.get(), LocalDate.parse(date, DTF), location, new ArrayList<>());

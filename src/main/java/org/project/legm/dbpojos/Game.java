@@ -27,10 +27,16 @@ public class Game {
     private Long gameID;
 
     @ManyToOne
-    @JoinColumn(name = "away_team")
+    @JoinColumns({
+            @JoinColumn(name = "home_team_id", referencedColumnName = "team_id"),
+            @JoinColumn(name = "home_team_user_id", referencedColumnName = "user_id")
+    })
     private Team awayTeam;
     @ManyToOne
-    @JoinColumn(name = "home_team")
+    @JoinColumns({
+            @JoinColumn(name = "away_team_id", referencedColumnName = "team_id"),
+            @JoinColumn(name = "away_team_user_id", referencedColumnName = "user_id")
+    })
     private Team homeTeam;
 
     private LocalDate date;

@@ -17,14 +17,20 @@ import java.util.List;
  * Date: 14.05.2024
  * Time: 14:26
  */
+
+@Entity
+@IdClass(TeamKey.class)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
 public class Team {
     @Id
     @Column(name = "team_id")
     private Long teamID;
+
+    @Id
+    @Column(name = "user_id")
+    private Long userID;
 
     private String name;
     private String code;
