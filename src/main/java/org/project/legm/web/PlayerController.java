@@ -5,6 +5,7 @@ import org.project.legm.bl.DBAccess;
 import org.project.legm.bl.GmService;
 import org.project.legm.dbpojos.Player;
 import org.project.legm.dbpojos.PlayerKey;
+import org.project.legm.dbpojos.PlayerStatistics;
 import org.project.legm.dbpojos.Team;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -42,5 +43,12 @@ public class PlayerController {
                 .orElseGet(() -> ResponseEntity.status(404).build());
     }
 
-    //TODO Season statistics endpoint
+    @GetMapping("/stats")
+    private ResponseEntity<PlayerStatistics> getPlayerStatistics
+            (@RequestParam(name = "player") Long playerID,
+             @RequestParam(name = "user") Long userID){
+        return dbAccess.getPlayerStatistics(playerID, userID)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(404).build());
+    }
 }
