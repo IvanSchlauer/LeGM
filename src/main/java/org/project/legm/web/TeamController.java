@@ -36,4 +36,6 @@ public class TeamController {
     ){
         return dbAccess.initSave(gmUser) ? ResponseEntity.ok(gmUser) : ResponseEntity.internalServerError().build();
     }
+
+    //TODO Games + dates of team
 }

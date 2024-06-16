@@ -14,8 +14,9 @@ import java.util.List;
  * Time: 14:12
  */
 public interface PlayerRepository extends JpaRepository<Player, Long> {
-    @Query("SELECT p\n" +
-            "FROM PlayerTeam pt INNER JOIN Player p ON pt.playerID = p.playerId\n" +
-            "WHERE pt.endDate IS NULL AND pt.teamID = :teamID")
-    public List<Player> getPlayersOfTeam(Long teamID);
+    @Query("""
+            SELECT p
+            FROM PlayerTeam pt INNER JOIN Player p ON pt.playerID = p.playerId INNER JOIN Team t ON pt.teamID = :teamID
+            WHERE pt.endDate IS NULL AND t.userID = :userID""")
+    public List<Player> getPlayersOfTeam(Long teamID, Long userID);
 }

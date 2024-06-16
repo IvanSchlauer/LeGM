@@ -17,6 +17,8 @@ import java.util.List;
  * Time: 14:12
  */
 public interface TeamRepository extends JpaRepository<Team, TeamKey> {
-    @Query("SELECT team FROM Team team LEFT JOIN team.awayGameList LEFT JOIN team.homeGameList")
+    @Query("SELECT team " +
+            "FROM Team team LEFT JOIN team.awayGameList " +
+            "               LEFT JOIN team.homeGameList")
     List<Team> getTeams();
 }

@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.project.legm.db.*;
 import org.project.legm.dbpojos.*;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,34 +32,20 @@ public class DBAccess {
     private final GmService gmService;
 
     public Boolean initSave(GmUser gmUser){
-        //TODO: Find working Countries API
-        //countryRepo.saveAll(gmService.fetchCountries());
-        //teamRepo.saveAll(gmService.fetchTeams());
-        //playerRepo.saveAll(gService.fetchPlayers());
-        //playerTeamRepo.saveAll(gmService.getPlayerTeamList());
-        //gameRepo.saveAll(gmService.fetchGames());
-        //gamePlayerRepo.saveAll(gmService.fetchGamePlayers());
+        try {
+            //TODO: Find working Countries API
+            //countryRepo.saveAll(gmService.fetchCountries());
+            gmUser = gmUserRepo.save(gmUser);
+            teamRepo.saveAll(gmService.fetchTeams(gmUser));
+            playerRepo.saveAll(gmService.fetchPlayers(gmUser));
+            playerTeamRepo.saveAll(gmService.getPlayerTeamList());
+            gameRepo.saveAll(gmService.fetchGames(gmUser));
+            gamePlayerRepo.saveAll(gmService.fetchGamePlayers());
+        } catch (WebClientResponseException e){
+            return false;
+        }
 
-    }
-
-    public void getTeamGamesAndGamePlayers(Team team){
-        List<Game> gamesList = gameRepo.getGamesByTeam(team.getTeamID());
-        gamesList.forEach(game -> {
-            System.out.printf("(%s) AwayTeam: %s | HomeTeam: %s\nGame Score: %f\n",
-                    game.getGameID().toString(), game.getAwayTeam().getName(), game.getHomeTeam().getName(),
-                    game.getGamePlayerList().stream().map(GamePlayer::getPts).mapToDouble(Double::doubleValue).sum());
-
-            List<GamePlayer> gamePlayerList = gamePlayerRepo.getGamePlayersByGame(game.getGameID());
-            log.info("gplist: " + gamePlayerList.size());
-            gamePlayerList.forEach(gamePlayer -> {
-                List<Player> playerTeamList = playerTeamRepo.getPlayerByTeamAndDate(team.getTeamID(), game.getDate());
-                log.info("ptlist: " + playerTeamList.size());
-                if (playerTeamList.contains(gamePlayer.getPlayer())){
-                    System.out.printf("%s %f, %f, %f\n", gamePlayer.getPlayer().getLastName(), gamePlayer.getPts(),
-                            gamePlayer.getAst(), gamePlayer.getOreb()+gamePlayer.getDreb());
-                }
-            });
-        });
+        return true;
     }
 
     public Optional<List<Team>> getAllTeams(){
@@ -69,8 +56,8 @@ public class DBAccess {
         return playerRepo.findById(playerID);
     }
 
-    public Optional<List<Player>> getPlayersOfTeam(Long teamID){
-        return Optional.ofNullable(playerRepo.getPlayersOfTeam(teamID)).filter(list -> !list.isEmpty());
+    public Optional<List<Player>> getPlayersOfTeam(Long teamID, Long userID){
+        return Optional.ofNullable(playerRepo.getPlayersOfTeam(teamID, userID)).filter(list -> !list.isEmpty());
     }
 
 }

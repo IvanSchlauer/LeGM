@@ -4,13 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.project.legm.bl.DBAccess;
 import org.project.legm.bl.GmService;
 import org.project.legm.dbpojos.Player;
+import org.project.legm.dbpojos.Team;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.Mapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Project: LeGM
@@ -27,9 +26,8 @@ public class PlayerController {
 
     @GetMapping
     private ResponseEntity<List<Player>> getPlayersOfTeam
-            (@RequestParam(name = "team") Long teamID){
-        Optional<List<Player>> playerList = dbAccess.getPlayersOfTeam(teamID);
-        return dbAccess.getPlayersOfTeam(teamID)
+            (@RequestParam(name = "team") Long teamID, @RequestParam(name = "user") Long userID){
+        return dbAccess.getPlayersOfTeam(teamID, userID)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(404).build());
     }
@@ -41,4 +39,6 @@ public class PlayerController {
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(404).build());
     }
+
+    //TODO Season statistics endpoint
 }

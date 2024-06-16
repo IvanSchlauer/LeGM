@@ -101,7 +101,7 @@ public class GmService {
                                 0.0, 0.0, 0, 0, 0,
                                 new ArrayList<>(), new ArrayList<>());
                         //log.info("Team " + nodeTeam.getTeamID() + " :" + nodeTeam.getName());
-                        if (nbaFranchise && !code.equals("SAS")) {
+                        if (nbaFranchise && !name.equals("Home Team Stephen A")) {
                             teamList.add(nodeTeam);
                         }
                         //log.info("Team object: " + nodeTeam);
