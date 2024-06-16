@@ -24,6 +24,9 @@ public class PlayerTeam {
     @Column(name = "team_id")
     private Long teamID;
     @Id
+    @Column(name = "user_id")
+    private Long userID;
+    @Id
     @Column(name = "start_date")
     private LocalDate startDate;
     @Id

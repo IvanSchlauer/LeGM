@@ -48,12 +48,12 @@ public class DBAccess {
         return true;
     }
 
-    public Optional<List<Team>> getAllTeams(){
-        return Optional.ofNullable(teamRepo.getTeams()).filter(list -> !list.isEmpty());
+    public Optional<List<Team>> getAllTeams(Long userID){
+        return Optional.ofNullable(teamRepo.getTeams(userID)).filter(list -> !list.isEmpty());
     }
 
-    public Optional<Player> getPlayerById(Long playerID){
-        return playerRepo.findById(playerID);
+    public Optional<Player> getPlayerById(PlayerKey playerKey){
+        return playerRepo.findById(playerKey);
     }
 
     public Optional<List<Player>> getPlayersOfTeam(Long teamID, Long userID){

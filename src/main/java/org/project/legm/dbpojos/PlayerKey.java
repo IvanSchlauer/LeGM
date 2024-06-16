@@ -1,23 +1,19 @@
 package org.project.legm.dbpojos;
 
-import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.time.LocalDate;
 
 /**
  * Project: LeGM
  * Created by: IS
- * Date: 21.05.2024
- * Time: 14:28
+ * Date: 16.06.2024
+ * Time: 12:20
  */
 @NoArgsConstructor
 @AllArgsConstructor
-public class PlayerTeamKey implements Serializable {
-    private Long teamID;
-    private Long userID;
-    private LocalDate startDate;
+public class PlayerKey implements Serializable {
     private Long playerID;
+    private Long userID;
 }

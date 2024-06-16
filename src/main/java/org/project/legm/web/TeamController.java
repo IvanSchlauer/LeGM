@@ -24,8 +24,10 @@ public class TeamController {
     private final DBAccess dbAccess;
 
     @GetMapping
-    private ResponseEntity<List<Team>> getTeams(){
-        Optional<List<Team>> teamList = dbAccess.getAllTeams();
+    private ResponseEntity<List<Team>> getTeams(
+            @RequestParam(name = "user") Long userID
+    ){
+        Optional<List<Team>> teamList = dbAccess.getAllTeams(userID);
 
         return teamList.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(404).build());
     }

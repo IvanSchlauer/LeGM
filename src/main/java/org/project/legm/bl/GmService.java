@@ -151,14 +151,14 @@ public class GmService {
                                 birthdate = "0404-04-04";
                             }
 
-                            Player nodePlayer = new Player(id, firstName, lastName, LocalDate.parse(birthdate, DTF),
+                            Player nodePlayer = new Player(id, gmUser.getUserID(), firstName, lastName, LocalDate.parse(birthdate, DTF),
                                     heightFeet * 12 + heightInches, weightPounds, 0, 0, 0,
                                     0, 0, 0, 0, 0, 0, 0, 0, 0,
                                     Position.F, college, null, null, new ArrayList<>());
                             InputStream is;
 
 
-                            PlayerTeam nodePlayerTeam = new PlayerTeam(team.getTeamID(), LocalDate.of(2023, 1, 1), nodePlayer.getPlayerId(), null);
+                            PlayerTeam nodePlayerTeam = new PlayerTeam(team.getTeamID(), team.getUserID(), LocalDate.of(2023, 1, 1), nodePlayer.getPlayerID(), null);
                             //log.info("nodePlayer: " + nodePlayer);
                             //log.info("nodePlayerTeam: " + nodePlayerTeam);
                             playerList.add(nodePlayer);
@@ -223,10 +223,10 @@ public class GmService {
         List<Player> lPlayerList = playerRepo.findAll();
         for (Player player : lPlayerList) {
             if (rateLimit < 6) {
-                log.info("Accessing statistics endpoint for Player: " + player.getFirstName() + " " + player.getPlayerId());
+                log.info("Accessing statistics endpoint for Player: " + player.getFirstName() + " " + player.getPlayerID());
                 String statisticsUri = "https://api-nba-v1.p.rapidapi.com/players/statistics?season=2023&id=";
                 Mono<String> responseTeams = webClient.get()
-                        .uri(statisticsUri + player.getPlayerId())
+                        .uri(statisticsUri + player.getPlayerID())
                         .header("X-RapidAPI-Host", host)
                         .header("X-RapidAPI-Key", apiKey)
                         .retrieve()

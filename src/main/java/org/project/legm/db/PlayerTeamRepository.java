@@ -16,17 +16,17 @@ import java.util.List;
 public interface PlayerTeamRepository extends JpaRepository<PlayerTeam, PlayerTeamKey> {
     @Query("SELECT pt " +
             "FROM PlayerTeam pt " +
-            "WHERE pt.endDate = NULL AND pt.teamID = :teamID")
-    public List<GamePlayer> getActivePlayerByTeam(Long teamID);
+            "WHERE pt.endDate = NULL AND pt.teamID = :teamID AND pt.userID = :userID")
+    public List<GamePlayer> getActivePlayerByTeam(Long teamID, Long userID);
 
     @Query("SELECT pt " +
             "FROM PlayerTeam pt " +
-            "WHERE pt.teamID = :teamID")
-    public List<GamePlayer> getPlayerByTeam(Long teamID);
+            "WHERE pt.teamID = :teamID AND pt.userID = :userID")
+    public List<GamePlayer> getPlayerByTeam(Long teamID, Long userID);
 
     @Query("""
             SELECT p
-            FROM PlayerTeam pt INNER JOIN Player p ON pt.playerID=p.playerId
+            FROM PlayerTeam pt INNER JOIN Player p ON pt.playerID=p.playerID
                                INNER JOIN Team t ON pt.teamID = t.teamID
             WHERE pt.startDate <= :date AND pt.endDate >= :date OR pt.endDate = NULL AND pt.teamID = :teamID AND t.userID = :userID""")
     public List<Player> getPlayerByTeamAndDate(Long teamID, LocalDate date, Long userID);

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.project.legm.bl.DBAccess;
 import org.project.legm.bl.GmService;
 import org.project.legm.dbpojos.Player;
+import org.project.legm.dbpojos.PlayerKey;
 import org.project.legm.dbpojos.Team;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -34,8 +35,9 @@ public class PlayerController {
 
     @GetMapping("/byId")
     private ResponseEntity<Player> getPlayerByID
-            (@RequestParam(name = "id") Long playerID){
-        return dbAccess.getPlayerById(playerID)
+            (@RequestParam(name = "player") Long playerID,
+             @RequestParam(name = "user") Long userID){
+        return dbAccess.getPlayerById(new PlayerKey(playerID, userID))
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(404).build());
     }
