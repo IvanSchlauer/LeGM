@@ -1,6 +1,5 @@
 package org.project.legm.dbpojos;
 
-import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 

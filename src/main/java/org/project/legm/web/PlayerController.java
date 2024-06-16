@@ -2,16 +2,13 @@ package org.project.legm.web;
 
 import lombok.RequiredArgsConstructor;
 import org.project.legm.bl.DBAccess;
-import org.project.legm.bl.GmService;
 import org.project.legm.dbpojos.Player;
 import org.project.legm.dbpojos.PlayerKey;
 import org.project.legm.dbpojos.PlayerStatistics;
-import org.project.legm.dbpojos.Team;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Project: LeGM

@@ -1,6 +1,5 @@
 package org.project.legm.db;
 
-import org.project.legm.dbpojos.GamePlayer;
 import org.project.legm.dbpojos.Player;
 import org.project.legm.dbpojos.PlayerKey;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,5 +18,5 @@ public interface PlayerRepository extends JpaRepository<Player, PlayerKey> {
             SELECT p
             FROM PlayerTeam pt INNER JOIN Player p ON pt.playerID = p.playerID INNER JOIN Team t ON pt.teamID = :teamID
             WHERE pt.endDate IS NULL AND t.userID = :userID""")
-    public List<Player> getPlayersOfTeam(Long teamID, Long userID);
+    List<Player> getPlayersOfTeam(Long teamID, Long userID);
 }

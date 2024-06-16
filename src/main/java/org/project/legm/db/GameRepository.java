@@ -1,8 +1,6 @@
 package org.project.legm.db;
 
 import org.project.legm.dbpojos.Game;
-import org.project.legm.dbpojos.GamePlayer;
-import org.project.legm.dbpojos.Team;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -16,8 +14,8 @@ import java.util.List;
  */
 public interface GameRepository extends JpaRepository<Game, Long> {
     @Query("""
-                SELECT game 
-                FROM Game game 
+                SELECT game
+                FROM Game game
                 WHERE game.awayTeam.teamID = :teamID OR game.homeTeam.teamID = :teamID AND game.awayTeam.userID = :userID""")
     List<Game> getGamesByTeam(Long teamID, Long userID);
 }

@@ -8,7 +8,6 @@ import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.User;
 import org.project.legm.db.GameRepository;
 import org.project.legm.db.GmUserRepository;
 import org.project.legm.db.PlayerRepository;
@@ -155,7 +154,6 @@ public class GmService {
                                     heightFeet * 12 + heightInches, weightPounds, 0, 0, 0,
                                     0, 0, 0, 0, 0, 0, 0, 0, 0,
                                     Position.F, college, null, null, new ArrayList<>());
-                            InputStream is;
 
 
                             PlayerTeam nodePlayerTeam = new PlayerTeam(team.getTeamID(), team.getUserID(), LocalDate.of(2023, 1, 1), nodePlayer.getPlayerID(), null);

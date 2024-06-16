@@ -17,25 +17,25 @@ public interface PlayerTeamRepository extends JpaRepository<PlayerTeam, PlayerTe
     @Query("SELECT pt " +
             "FROM PlayerTeam pt " +
             "WHERE pt.endDate = NULL AND pt.teamID = :teamID AND pt.userID = :userID")
-    public List<GamePlayer> getActivePlayerByTeam(Long teamID, Long userID);
+    List<GamePlayer> getActivePlayerByTeam(Long teamID, Long userID);
 
     @Query("SELECT pt " +
             "FROM PlayerTeam pt " +
             "WHERE pt.teamID = :teamID AND pt.userID = :userID")
-    public List<GamePlayer> getPlayerByTeam(Long teamID, Long userID);
+    List<GamePlayer> getPlayerByTeam(Long teamID, Long userID);
 
     @Query("""
             SELECT p
             FROM PlayerTeam pt INNER JOIN Player p ON pt.playerID=p.playerID
                                INNER JOIN Team t ON pt.teamID = t.teamID
             WHERE pt.startDate <= :date AND pt.endDate >= :date OR pt.endDate = NULL AND pt.teamID = :teamID AND t.userID = :userID""")
-    public List<Player> getPlayerByTeamAndDate(Long teamID, LocalDate date, Long userID);
+    List<Player> getPlayerByTeamAndDate(Long teamID, LocalDate date, Long userID);
 
     @Query("""
             SELECT DISTINCT(pt.teamID)
             FROM PlayerTeam pt INNER JOIN Team t ON pt.teamID=t.teamID
             WHERE pt.playerID = :playerID AND t.userID = :userID""")
-    public List<Team> getTeamsPlayedFor(Long playerID, Long userID);
+    List<Team> getTeamsPlayedFor(Long playerID, Long userID);
 
 
 }

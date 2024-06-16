@@ -6,8 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.lang.reflect.Field;
-import java.nio.DoubleBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,12 +17,13 @@ import java.util.List;
  */
 public interface GamePlayerRepository extends JpaRepository<GamePlayer, Long> {
     @Query("SELECT gp FROM game_player gp WHERE gp.game.gameID = :gameID AND gp.game.awayTeam.userID = :userID")
-    public List<GamePlayer> getGamePlayersByGame(Long gameID, Long userID);
+    List<GamePlayer> getGamePlayersByGame(Long gameID, Long userID);
 
-    @Query("SELECT gp\n" +
-            "FROM game_player gp\n" +
-            "WHERE gp.player.playerID = :playerID AND gp.player.userID = :userID")
-    public List<GamePlayer> getGamePlayerByPlayer(Long playerID, Long userID);
+    @Query("""
+            SELECT gp
+            FROM game_player gp
+            WHERE gp.player.playerID = :playerID AND gp.player.userID = :userID""")
+    List<GamePlayer> getGamePlayerByPlayer(Long playerID, Long userID);
 
     @Query("""
             SELECT CAST(SUM(gp.minute) / COUNT(gp.minute) AS double), CAST(SUM(gp.pts) / COUNT(gp.pts) AS double),
