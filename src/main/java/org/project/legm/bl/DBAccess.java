@@ -62,4 +62,9 @@ public class DBAccess {
     public Optional<PlayerStatistics> getPlayerStatistics(Long playerID, Long userID){
         return Optional.ofNullable(gamePlayerRepo.getSeasonStats(playerID, userID));
     }
+
+    public Optional<List<Game>> getGamesOfTeam(Long teamID, Long userID){
+        return Optional.ofNullable(teamID != null ? gameRepo.getGamesByTeam(teamID, userID) : gameRepo.getGames(userID))
+                .filter(list -> !list.isEmpty());
+    }
 }

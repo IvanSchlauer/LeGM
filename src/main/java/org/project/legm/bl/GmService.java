@@ -1,6 +1,7 @@
 package org.project.legm.bl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -14,7 +15,10 @@ import org.project.legm.db.PlayerRepository;
 import org.project.legm.db.TeamRepository;
 import org.project.legm.dbpojos.*;
 import org.project.legm.pojos.Position;
+import org.project.legm.pojos.PyRequest;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
@@ -270,5 +274,43 @@ public class GmService {
             }
         }
         return gamePlayerList;
+    }
+
+    public List<GamePlayer> fetchSimulation(PyRequest requestBody){
+        List<GamePlayer> gamePlayerList = new ArrayList<>();
+        String statisticsUri = "localhost:5000/predict";
+        Mono<String> responseSim = webClient.post()
+                .uri(statisticsUri)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromValue(requestBody))
+                .retrieve()
+                .bodyToMono(String.class);
+
+        try {
+            JsonNode rootNode = mapper.readTree(responseSim.block());
+            log.info("Finished statistics API Access");
+            if (rootNode.get("away_team").get("stats").isArray()){
+                for (JsonNode statNode : rootNode.get("away_team").get("stats")){
+                    Long playerID = statNode.get("player_id").asLong();
+                    Double minute = statNode.get("minutes_played").asDouble();
+                    Double pts = statNode.get("points").asDouble();
+                    Double ast = statNode.get("assists").asDouble();
+                    Double oreb = statNode.get("offReb").asDouble();
+                    Double dreb = statNode.get("defReb").asDouble();
+                    Double stl = statNode.get("steals").asDouble();
+                    Double turno = statNode.get("turnovers").asDouble();
+                    Double fga = statNode.get("fga").asDouble();
+                    Double fgm = statNode.get("fgm").asDouble();
+                    Double threepa = statNode.get("3pt_att").asDouble();
+                    Double threepm = statNode.get("3pt_made").asDouble();
+                    Double fta = statNode.get("fta").asDouble();
+                    Double ftm = statNode.get("ftm").asDouble();
+
+                }
+            }
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
     }
 }

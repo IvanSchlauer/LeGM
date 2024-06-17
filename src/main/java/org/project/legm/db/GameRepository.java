@@ -18,4 +18,10 @@ public interface GameRepository extends JpaRepository<Game, Long> {
                 FROM Game game
                 WHERE game.awayTeam.teamID = :teamID OR game.homeTeam.teamID = :teamID AND game.awayTeam.userID = :userID""")
     List<Game> getGamesByTeam(Long teamID, Long userID);
+
+    @Query("""
+                SELECT game
+                FROM Game game
+                WHERE game.awayTeam.userID = :userID""")
+    List<Game> getGames(Long userID);
 }
