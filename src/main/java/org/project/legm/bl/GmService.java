@@ -9,10 +9,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.project.legm.db.GameRepository;
-import org.project.legm.db.GmUserRepository;
-import org.project.legm.db.PlayerRepository;
-import org.project.legm.db.TeamRepository;
+import org.project.legm.db.*;
 import org.project.legm.dbpojos.*;
 import org.project.legm.pojos.Position;
 import org.project.legm.pojos.PyRequest;
@@ -22,7 +19,9 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import javax.swing.text.html.Option;
 import java.io.*;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -41,6 +40,7 @@ public class GmService {
     private final TeamRepository teamRepo;
     private final PlayerRepository playerRepo;
     private final GameRepository gameRepo;
+    private final GamePlayerRepository gamePlayerRepo;
     private final WebClientConfig webClientConfig;
 
     private WebClient webClient;
@@ -119,12 +119,59 @@ public class GmService {
     }
 
     public List<Player> fetchPlayers(GmUser gmUser) {
-        int rateLimit = 0;
+        InputStream is = GmService.class.getResourceAsStream("/playerRatings.json");
         //log.info("All Teams: " + teamList.stream().map(Team::getTeamID).toList());
         List<Team> lTeamList = teamRepo.findAll();
-        for (Team team : lTeamList) {
-            //log.info("Accessing Players API with Team: " + team.getTeamID());
-            while (rateLimit < 1) {
+        try {
+            JsonNode rootNode = mapper.readTree(is);
+            for (Team team : lTeamList) {
+                //log.info("Accessing Players API with Team: " + team.getTeamID());
+
+                if (rootNode.isArray()) {
+                    for (JsonNode itemNode : rootNode) {
+                        Long id = itemNode.get("player_id").asLong();
+                        String firstName = itemNode.get("first_name").asText();
+                        String lastName = itemNode.get("last_name").asText();
+                        String birthdate = itemNode.get("birthdate").asText();
+                        Long country = itemNode.get("country_id").asLong();
+                        Double heightFeet = itemNode.get("height").asDouble();
+                        Double heightInches = itemNode.get("height").asDouble();
+                        Double weightPounds = itemNode.get("weight").asDouble();
+                        String college = itemNode.get("college").asText();
+                        Integer defIQ = itemNode.get("defiq").asInt();
+                        Integer finishing = itemNode.get("finishing").asInt();
+                        Integer handles = itemNode.get("handles").asInt();
+                        Integer intangibles = itemNode.get("intangibles").asInt();
+                        Integer midrange = itemNode.get("midrange").asInt();
+                        Integer offiq = itemNode.get("offiq").asInt();
+                        Integer passing = itemNode.get("passing").asInt();
+                        Integer post = itemNode.get("post").asInt();
+                        Integer rebounding = itemNode.get("rebounding").asInt();
+                        Integer speed = itemNode.get("speed").asInt();
+                        Integer stamina = itemNode.get("stamina").asInt();
+                        Integer three_pointer = itemNode.get("three_pointer").asInt();
+
+                        if (birthdate == null || birthdate.equals("null")) {
+                            birthdate = "0404-04-04";
+                        }
+
+                        Player nodePlayer = new Player(id, gmUser.getUserID(), firstName, lastName, LocalDate.parse(birthdate, DTF),
+                                heightFeet * 12 + heightInches, weightPounds, handles, passing,
+                                rebounding, three_pointer, midrange, post, finishing, speed, stamina, offiq, defIQ, intangibles,
+                                Position.F, college, null, null, new ArrayList<>());
+
+
+                        PlayerTeam nodePlayerTeam = new PlayerTeam(team.getTeamID(), team.getUserID(), LocalDate.of(2023, 1, 1), nodePlayer.getPlayerID(), null);
+                        //log.info("nodePlayer: " + nodePlayer);
+                        //log.info("nodePlayerTeam: " + nodePlayerTeam);
+                        if (weightPounds != 0 && !birthdate.equals("0404-04-04") && !college.equals("null")){
+                            playerList.add(nodePlayer);
+                            playerTeamList.add(nodePlayerTeam);
+                        }
+                    }
+                }
+
+                /*
                 log.info("Accessing Players API");
                 String playerUri = "https://api-nba-v1.p.rapidapi.com/players?season=2023&team=";
                 Mono<String> responsePlayers = webClient.get()
@@ -134,48 +181,13 @@ public class GmService {
                         .retrieve()
                         .bodyToMono(String.class);
 
-                try {
-                    JsonNode rootNode = mapper.readTree(responsePlayers.block());
-                    log.info("Finished Players API Access: " + rootNode);
-                    JsonNode responseNode = rootNode.get("response");
-                    if (responseNode.isArray()) {
-                        for (JsonNode itemNode : responseNode) {
-                            Long id = itemNode.get("id").asLong();
-                            String firstName = itemNode.get("firstname").asText();
-                            String lastName = itemNode.get("lastname").asText();
-                            String birthdate = itemNode.get("birth").get("date").asText();
-                            String country = itemNode.get("birth").get("country").asText();
-                            Double heightFeet = itemNode.get("height").get("feets").asDouble();
-                            Double heightInches = itemNode.get("height").get("inches").asDouble();
-                            Double weightPounds = itemNode.get("weight").get("pounds").asDouble();
-                            String college = itemNode.get("college").asText();
 
-                            if (birthdate == null || birthdate.equals("null")) {
-                                birthdate = "0404-04-04";
-                            }
-
-                            Player nodePlayer = new Player(id, gmUser.getUserID(), firstName, lastName, LocalDate.parse(birthdate, DTF),
-                                    heightFeet * 12 + heightInches, weightPounds, 0, 0, 0,
-                                    0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                    Position.F, college, null, null, new ArrayList<>());
-
-
-                            PlayerTeam nodePlayerTeam = new PlayerTeam(team.getTeamID(), team.getUserID(), LocalDate.of(2023, 1, 1), nodePlayer.getPlayerID(), null);
-                            //log.info("nodePlayer: " + nodePlayer);
-                            //log.info("nodePlayerTeam: " + nodePlayerTeam);
-                            playerList.add(nodePlayer);
-                            playerTeamList.add(nodePlayerTeam);
-                        }
-                    }
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException(e);
-                }
-
-                rateLimit++;
+                */
             }
+        }catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        //log.info("PlayerList: " + playerList);
-        //log.info("PlayerTeamList: " + playerTeamList);
+
         return playerList;
     }
 
@@ -258,15 +270,14 @@ public class GmService {
                             Optional<Game> game = gameRepo.findById(gameID);
 
                             if (game.isPresent()) {
-                                GamePlayer gp = new GamePlayer(null, min, pts, ast, oreb, dreb, stl, turno, fga, fgm,
+                                GamePlayer gp = new GamePlayer(null, player.getLastName(),min, pts, ast, oreb, dreb, stl, turno, fga, fgm,
                                         threepa, threepm, fta, ftm, player, game.get());
                                 //log.info("Gameplayer: " + gp);
                                 gamePlayerList.add(gp);
                             }
                         }
                     }
-                    Thread.sleep(3000);
-                } catch (JsonProcessingException | NoSuchElementException | InterruptedException e) {
+                } catch (JsonProcessingException | NoSuchElementException e) {
                     throw new RuntimeException(e);
                 }
 
@@ -276,9 +287,9 @@ public class GmService {
         return gamePlayerList;
     }
 
-    public List<GamePlayer> fetchSimulation(PyRequest requestBody){
+    public Game fetchSimulation(PyRequest requestBody, Long userID, LocalDate gameDate, String location){
         List<GamePlayer> gamePlayerList = new ArrayList<>();
-        String statisticsUri = "localhost:5000/predict";
+        String statisticsUri = "http://127.0.0.1:5000/predict";
         Mono<String> responseSim = webClient.post()
                 .uri(statisticsUri)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -286,17 +297,22 @@ public class GmService {
                 .retrieve()
                 .bodyToMono(String.class);
 
+        Game game;
         try {
             JsonNode rootNode = mapper.readTree(responseSim.block());
             log.info("Finished statistics API Access");
+            game = new Game(gameRepo.getNextID()+1L, requestBody.getAway_team().getDbTeam(), requestBody.getHome_team().getDbTeam(),
+                    gameDate, location, new ArrayList<>());
+            log.info("Game: " + game);
+            game = gameRepo.save(game);
             if (rootNode.get("away_team").get("stats").isArray()){
                 for (JsonNode statNode : rootNode.get("away_team").get("stats")){
-                    Long playerID = statNode.get("player_id").asLong();
+                    Long playerID = statNode.get("id").asLong();
                     Double minute = statNode.get("minutes_played").asDouble();
                     Double pts = statNode.get("points").asDouble();
                     Double ast = statNode.get("assists").asDouble();
-                    Double oreb = statNode.get("offReb").asDouble();
-                    Double dreb = statNode.get("defReb").asDouble();
+                    Double oreb = statNode.get("off_reb").asDouble();
+                    Double dreb = statNode.get("def_reb").asDouble();
                     Double stl = statNode.get("steals").asDouble();
                     Double turno = statNode.get("turnovers").asDouble();
                     Double fga = statNode.get("fga").asDouble();
@@ -306,11 +322,21 @@ public class GmService {
                     Double fta = statNode.get("fta").asDouble();
                     Double ftm = statNode.get("ftm").asDouble();
 
+
+                    Optional<Player> nodePlayer = playerRepo.findById(new PlayerKey(playerID, userID));
+
+                    if (nodePlayer.isPresent()){
+                        GamePlayer nodeGamePlayer = new GamePlayer(null, nodePlayer.get().getLastName(),minute, pts, ast, oreb, dreb, stl,
+                                turno, fga, fgm, threepa, threepm, fta, ftm, nodePlayer.get(), game);
+                        gamePlayerList.add(nodeGamePlayer);
+                    }
                 }
             }
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        return null;
+
+        gamePlayerRepo.saveAll(gamePlayerList);
+        return game;
     }
 }

@@ -19,4 +19,11 @@ public interface PlayerRepository extends JpaRepository<Player, PlayerKey> {
             FROM PlayerTeam pt INNER JOIN Player p ON pt.playerID = p.playerID INNER JOIN Team t ON pt.teamID = :teamID
             WHERE pt.endDate IS NULL AND t.userID = :userID""")
     List<Player> getPlayersOfTeam(Long teamID, Long userID);
+
+    @Query("""
+            SELECT p 
+            FROM Player p INNER JOIN game_player gp ON p.playerID = gp.player.playerID
+            WHERE gp.gamePlayerID = :gamePlayerID
+            """)
+    Player getPlayerByGamePlayer(Long gamePlayerID);
 }

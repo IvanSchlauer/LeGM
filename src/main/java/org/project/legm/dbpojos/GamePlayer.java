@@ -22,6 +22,8 @@ public class GamePlayer {
     @Column(name = "gameplayer_id")
     private Long gamePlayerID;
 
+    private String lastName;
+
     private Double minute;
     private Double pts;
     private Double ast;

@@ -40,6 +40,14 @@ public class PlayerController {
                 .orElseGet(() -> ResponseEntity.status(404).build());
     }
 
+    @GetMapping("/byGP")
+    private ResponseEntity<Player> getPlayerByGamePlayer
+            (@RequestParam(name = "gameplayer") Long gamePlayerID){
+        return dbAccess.getPlayerByGamePlayer(gamePlayerID)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(404).build());
+    }
+
     @GetMapping("/stats")
     private ResponseEntity<PlayerStatistics> getPlayerStatistics
             (@RequestParam(name = "player") Long playerID,

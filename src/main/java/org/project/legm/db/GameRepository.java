@@ -24,4 +24,10 @@ public interface GameRepository extends JpaRepository<Game, Long> {
                 FROM Game game
                 WHERE game.awayTeam.userID = :userID""")
     List<Game> getGames(Long userID);
+
+    @Query("""
+                SELECT MAX(game.gameID)
+                FROM Game game
+                """)
+    Long getNextID();
 }

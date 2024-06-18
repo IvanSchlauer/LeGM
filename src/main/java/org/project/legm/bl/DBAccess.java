@@ -4,9 +4,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.project.legm.db.*;
 import org.project.legm.dbpojos.*;
+import org.project.legm.pojos.PyPlayer;
+import org.project.legm.pojos.PyRequest;
+import org.project.legm.pojos.PyTeam;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import javax.swing.text.html.Option;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,5 +72,56 @@ public class DBAccess {
     public Optional<List<Game>> getGamesOfTeam(Long teamID, Long userID){
         return Optional.ofNullable(teamID != null ? gameRepo.getGamesByTeam(teamID, userID) : gameRepo.getGames(userID))
                 .filter(list -> !list.isEmpty());
+    }
+
+    public Optional<Player> getPlayerByGamePlayer(Long gamePlayerID){
+        return Optional.ofNullable(playerRepo.getPlayerByGamePlayer(gamePlayerID));
+    }
+
+    public Optional<Game> simulateGame(Long awayTeamID, Long homeTeamID, Long userID, LocalDate gameDate, String location){
+        List<Player> awayTeamPlayers = playerTeamRepo.getActivePlayerByTeam(awayTeamID, userID);
+        List<Player> homeTeamPlayers = playerTeamRepo.getActivePlayerByTeam(homeTeamID, userID);
+
+        Optional<Team> awayTeam = teamRepo.findById(new TeamKey(awayTeamID, userID));
+        Optional<Team> homeTeam = teamRepo.findById(new TeamKey(homeTeamID, userID));
+
+        if (awayTeam.isPresent() && homeTeam.isPresent() && !awayTeamPlayers.isEmpty() && !homeTeamPlayers.isEmpty()){
+            List<PyPlayer> awayPyPlayers = new ArrayList<>();
+            List<PyPlayer> homePyPlayers = new ArrayList<>();
+
+            awayTeamPlayers.forEach(p -> {
+                awayPyPlayers.add(
+                        new PyPlayer(p.getPlayerID() ,p.getFirstName()+p.getLastName(), getOffRating(p), getDefRating(p)));
+            });
+            homeTeamPlayers.forEach(p -> {
+                homePyPlayers.add(
+                        new PyPlayer(p.getPlayerID() ,p.getFirstName()+p.getLastName(), getOffRating(p), getDefRating(p)));
+            });
+
+            PyRequest requestBody = new PyRequest(
+                    new PyTeam(homeTeam.get() ,homeTeam.get().getName(), homeTeam.get().getCode(), homePyPlayers),
+                    new PyTeam(homeTeam.get() ,awayTeam.get().getName(), awayTeam.get().getCode(), awayPyPlayers));
+
+            Game game = gmService.fetchSimulation(requestBody, userID, gameDate, location);
+
+
+            return Optional.ofNullable(game);
+        }
+
+        log.info("empty optional");
+        return Optional.empty();
+    }
+
+    public Integer getOffRating(Player p){
+        return p.getFinishing()+p.getOffIQ()+p.getHandles()+p.getMidRange()+p.getPassing()+p.getPost()
+                +p.getPassing()+p.getThreePointer();
+    }
+
+    public Integer getDefRating(Player p){
+        return p.getDefIQ()+p.getIntangibles()+p.getRebounding();
+    }
+
+    public Optional<List<GamePlayer>> getPlayersByGame(Long gameID, Long teamID, Long userID){
+        return Optional.ofNullable(gamePlayerRepo.getGamePlayersByGame(gameID, teamID, userID)).filter(list -> !list.isEmpty());
     }
 }

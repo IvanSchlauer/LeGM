@@ -14,15 +14,17 @@ import java.util.List;
  * Time: 14:12
  */
 public interface PlayerTeamRepository extends JpaRepository<PlayerTeam, PlayerTeamKey> {
-    @Query("SELECT pt " +
-            "FROM PlayerTeam pt " +
-            "WHERE pt.endDate = NULL AND pt.teamID = :teamID AND pt.userID = :userID")
-    List<GamePlayer> getActivePlayerByTeam(Long teamID, Long userID);
+    @Query("""
+            SELECT p
+            FROM PlayerTeam pt INNER JOIN Player p ON pt.playerID = p.playerID
+            WHERE pt.endDate IS NULL AND pt.teamID = :teamID AND pt.userID = :userID""")
+    List<Player> getActivePlayerByTeam(Long teamID, Long userID);
 
-    @Query("SELECT pt " +
-            "FROM PlayerTeam pt " +
-            "WHERE pt.teamID = :teamID AND pt.userID = :userID")
-    List<GamePlayer> getPlayerByTeam(Long teamID, Long userID);
+    @Query("""
+            SELECT pt \
+            FROM PlayerTeam pt INNER JOIN Player p ON pt.playerID = p.playerID
+            WHERE pt.teamID = :teamID AND pt.userID = :userID""")
+    List<Player> getPlayerByTeam(Long teamID, Long userID);
 
     @Query("""
             SELECT p

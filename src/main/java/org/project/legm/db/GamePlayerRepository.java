@@ -16,8 +16,12 @@ import java.util.List;
  * Time: 14:11
  */
 public interface GamePlayerRepository extends JpaRepository<GamePlayer, Long> {
-    @Query("SELECT gp FROM game_player gp WHERE gp.game.gameID = :gameID AND gp.game.awayTeam.userID = :userID")
-    List<GamePlayer> getGamePlayersByGame(Long gameID, Long userID);
+    @Query("""
+            SELECT gp
+            FROM game_player gp
+            WHERE gp.game.gameID = :gameID AND gp.game.awayTeam.userID = :userID
+            AND gp.game.awayTeam.teamID = :teamID OR gp.game.homeTeam.teamID = :teamID""")
+    List<GamePlayer> getGamePlayersByGame(Long gameID, Long teamID, Long userID);
 
     @Query("""
             SELECT gp
