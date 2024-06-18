@@ -53,9 +53,11 @@ public class GmService {
     private final ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+    private final GmMapping gmMapping;
 
     private final List<Team> teamList = new ArrayList<>();
     private final List<Country> countryList = new ArrayList<>();
+    @Getter
     private final List<Player> playerList = new ArrayList<>();
     private final List<Game> gamesList = new ArrayList<>();
     private final List<GamePlayer> gamePlayerList = new ArrayList<>();
@@ -124,55 +126,19 @@ public class GmService {
         List<Team> lTeamList = teamRepo.findAll();
         try {
             JsonNode rootNode = mapper.readTree(is);
-            for (Team team : lTeamList) {
-                //log.info("Accessing Players API with Team: " + team.getTeamID());
-
-                if (rootNode.isArray()) {
-                    for (JsonNode itemNode : rootNode) {
-                        Long id = itemNode.get("player_id").asLong();
-                        String firstName = itemNode.get("first_name").asText();
-                        String lastName = itemNode.get("last_name").asText();
-                        String birthdate = itemNode.get("birthdate").asText();
-                        Long country = itemNode.get("country_id").asLong();
-                        Double heightFeet = itemNode.get("height").asDouble();
-                        Double heightInches = itemNode.get("height").asDouble();
-                        Double weightPounds = itemNode.get("weight").asDouble();
-                        String college = itemNode.get("college").asText();
-                        Integer defIQ = itemNode.get("defiq").asInt();
-                        Integer finishing = itemNode.get("finishing").asInt();
-                        Integer handles = itemNode.get("handles").asInt();
-                        Integer intangibles = itemNode.get("intangibles").asInt();
-                        Integer midrange = itemNode.get("midrange").asInt();
-                        Integer offiq = itemNode.get("offiq").asInt();
-                        Integer passing = itemNode.get("passing").asInt();
-                        Integer post = itemNode.get("post").asInt();
-                        Integer rebounding = itemNode.get("rebounding").asInt();
-                        Integer speed = itemNode.get("speed").asInt();
-                        Integer stamina = itemNode.get("stamina").asInt();
-                        Integer three_pointer = itemNode.get("three_pointer").asInt();
-
-                        if (birthdate == null || birthdate.equals("null")) {
-                            birthdate = "0404-04-04";
-                        }
-
-                        Player nodePlayer = new Player(id, gmUser.getUserID(), firstName, lastName, LocalDate.parse(birthdate, DTF),
-                                heightFeet * 12 + heightInches, weightPounds, handles, passing,
-                                rebounding, three_pointer, midrange, post, finishing, speed, stamina, offiq, defIQ, intangibles,
-                                Position.F, college, null, null, new ArrayList<>());
-
-
-                        PlayerTeam nodePlayerTeam = new PlayerTeam(team.getTeamID(), team.getUserID(), LocalDate.of(2023, 1, 1), nodePlayer.getPlayerID(), null);
-                        //log.info("nodePlayer: " + nodePlayer);
-                        //log.info("nodePlayerTeam: " + nodePlayerTeam);
-                        if (weightPounds != 0 && !birthdate.equals("0404-04-04") && !college.equals("null")){
-                            playerList.add(nodePlayer);
-                            playerTeamList.add(nodePlayerTeam);
-                        }
+            if (rootNode.isArray()) {
+                for (JsonNode itemNode : rootNode) {
+                    Player nodePlayer = gmMapping.mapPlayer(itemNode);
+                    nodePlayer.setUserID(gmUser.getUserID());
+                    //log.info("nodePlayer: " + nodePlayer);
+                    //log.info("nodePlayerTeam: " + nodePlayerTeam);
+                    if (nodePlayer.getWeight() != 0 && !nodePlayer.getBirthdate().toString().equals("0404-04-04")
+                            && !nodePlayer.getCollege().equals("null")){
+                        playerList.add(nodePlayer);
                     }
                 }
-
-                /*
-                log.info("Accessing Players API");
+            }
+            for (Team team : lTeamList) {
                 String playerUri = "https://api-nba-v1.p.rapidapi.com/players?season=2023&team=";
                 Mono<String> responsePlayers = webClient.get()
                         .uri(playerUri + team.getTeamID())
@@ -181,8 +147,22 @@ public class GmService {
                         .retrieve()
                         .bodyToMono(String.class);
 
-
-                */
+                JsonNode rootNodeAPI = mapper.readTree(responsePlayers.block());
+                JsonNode responseNode = rootNodeAPI.get("response");
+                if (responseNode.isArray()){
+                    for (JsonNode itemNode : responseNode){
+                        Long id = itemNode.get("id").asLong();
+                        Optional<Player> resultPlayer =  playerList.stream()
+                                .filter(p -> p.getPlayerID().equals(id)).findFirst();
+                        if (resultPlayer.isPresent()){
+                            PlayerTeam nodePlayerTeam =
+                                    new PlayerTeam(team.getTeamID(), team.getUserID(),
+                                            LocalDate.of(2023, 1, 1),
+                                            resultPlayer.get().getPlayerID(), null);
+                            playerTeamList.add(nodePlayerTeam);
+                        }
+                    }
+                }
             }
         }catch (IOException e) {
             throw new RuntimeException(e);

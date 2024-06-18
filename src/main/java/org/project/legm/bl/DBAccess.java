@@ -43,6 +43,10 @@ public class DBAccess {
             gmUser = gmUserRepo.save(gmUser);
             teamRepo.saveAll(gmService.fetchTeams(gmUser));
             playerRepo.saveAll(gmService.fetchPlayers(gmUser));
+            log.info("Size: " + gmService.getPlayerTeamList().size());
+            //log.info("list: " + gmService.getPlayerTeamList());
+            log.info("PSize: " + gmService.getPlayerList().size());
+            //log.info("Plist: " + gmService.getPlayerList());
             playerTeamRepo.saveAll(gmService.getPlayerTeamList());
             gameRepo.saveAll(gmService.fetchGames(gmUser));
             gamePlayerRepo.saveAll(gmService.fetchGamePlayers());
