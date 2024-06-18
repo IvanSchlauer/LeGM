@@ -46,8 +46,17 @@ public class GamePlayer {
     })
     @JsonIgnore
     private Player player;
+
+    @ManyToOne
+    @JoinColumns({
+            @JoinColumn(name = "team_id", referencedColumnName = "team_id"),
+            @JoinColumn(name = "team_user_id", referencedColumnName = "user_id")
+    })
+    private Team team;
+
     @ManyToOne
     @JoinColumn(name = "game_id")
     @JsonIgnore
     private Game game;
+
 }

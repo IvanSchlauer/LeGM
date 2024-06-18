@@ -1,6 +1,7 @@
 package org.project.legm.db;
 
 import org.project.legm.dbpojos.*;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -39,5 +40,17 @@ public interface PlayerTeamRepository extends JpaRepository<PlayerTeam, PlayerTe
             WHERE pt.playerID = :playerID AND t.userID = :userID""")
     List<Team> getTeamsPlayedFor(Long playerID, Long userID);
 
+    @Query("""
+            SELECT t
+            FROM PlayerTeam pt INNER JOIN Team t ON pt.teamID = t.teamID
+            WHERE pt.playerID = :playerID AND pt.startDate <= :date AND pt.endDate IS NULL OR pt.endDate >= :date
+            """)
+    Team getTeamPlayedForByDate(Long playerID, LocalDate date);
 
+    @Query("""
+            SELECT pt
+            FROM PlayerTeam pt
+            WHERE pt.playerID = :playerID AND pt.startDate = :date
+            """)
+    Team getTeamOnJoinDate(Long playerID, LocalDate date);
 }

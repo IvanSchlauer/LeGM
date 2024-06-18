@@ -38,6 +38,7 @@ public class GmService {
     private final GmUserRepository gmUserRepo;
     private final TeamRepository teamRepo;
     private final PlayerRepository playerRepo;
+    private final PlayerTeamRepository playerTeamRepo;
     private final GameRepository gameRepo;
     private final GamePlayerRepository gamePlayerRepo;
     private final WebClientConfig webClientConfig;
@@ -172,11 +173,15 @@ public class GmService {
                         Optional<Player> resultPlayer =  playerList.stream()
                                 .filter(p -> p.getPlayerID().equals(id)).findFirst();
                         if (resultPlayer.isPresent()){
+                            LocalDate startDate = LocalDate.of(2023, 1, 1);
                             PlayerTeam nodePlayerTeam =
                                     new PlayerTeam(team.getTeamID(), team.getUserID(),
-                                            LocalDate.of(2023, 1, 1),
+                                            startDate,
                                             resultPlayer.get().getPlayerID(), null);
-                            playerTeamList.add(nodePlayerTeam);
+                            if (playerTeamList.stream().
+                                    filter(p -> p.getPlayerID().equals(resultPlayer.get().getPlayerID()) && p.getStartDate().equals(startDate)).findFirst().isEmpty()){
+                                playerTeamList.add(nodePlayerTeam);
+                            }
                         }
                     }
                 }
@@ -267,8 +272,9 @@ public class GmService {
                             Optional<Game> game = gameRepo.findById(gameID);
 
                             if (game.isPresent()) {
+                                Team team = playerTeamRepo.getTeamPlayedForByDate(player.getPlayerID(), game.get().getDate());
                                 GamePlayer gp = new GamePlayer(null, player.getLastName(),min, pts, ast, oreb, dreb, stl, turno, fga, fgm,
-                                        threepa, threepm, fta, ftm, player, game.get());
+                                        threepa, threepm, fta, ftm, player, team, game.get());
                                 //log.info("Gameplayer: " + gp);
                                 gamePlayerList.add(gp);
                             }
@@ -323,8 +329,40 @@ public class GmService {
                     Optional<Player> nodePlayer = playerRepo.findById(new PlayerKey(playerID, userID));
 
                     if (nodePlayer.isPresent()){
+                        Team team = playerTeamRepo.getTeamPlayedForByDate(
+                                nodePlayer.get().getPlayerID(), game.getDate());
                         GamePlayer nodeGamePlayer = new GamePlayer(null, nodePlayer.get().getLastName(),minute, pts, ast, oreb, dreb, stl,
-                                turno, fga, fgm, threepa, threepm, fta, ftm, nodePlayer.get(), game);
+                                turno, fga, fgm, threepa, threepm, fta, ftm, nodePlayer.get(), team, game);
+                        gamePlayerList.add(nodeGamePlayer);
+                    }
+                }
+            }
+
+            if (rootNode.get("home_team").get("stats").isArray()){
+                for (JsonNode statNode : rootNode.get("home_team").get("stats")){
+                    Long playerID = statNode.get("id").asLong();
+                    Double minute = statNode.get("minutes_played").asDouble();
+                    Double pts = statNode.get("points").asDouble();
+                    Double ast = statNode.get("assists").asDouble();
+                    Double oreb = statNode.get("off_reb").asDouble();
+                    Double dreb = statNode.get("def_reb").asDouble();
+                    Double stl = statNode.get("steals").asDouble();
+                    Double turno = statNode.get("turnovers").asDouble();
+                    Double fga = statNode.get("fga").asDouble();
+                    Double fgm = statNode.get("fgm").asDouble();
+                    Double threepa = statNode.get("3pt_att").asDouble();
+                    Double threepm = statNode.get("3pt_made").asDouble();
+                    Double fta = statNode.get("fta").asDouble();
+                    Double ftm = statNode.get("ftm").asDouble();
+
+
+                    Optional<Player> nodePlayer = playerRepo.findById(new PlayerKey(playerID, userID));
+
+                    if (nodePlayer.isPresent()){
+                        Team team = playerTeamRepo.getTeamPlayedForByDate(
+                                nodePlayer.get().getPlayerID(), game.getDate());
+                        GamePlayer nodeGamePlayer = new GamePlayer(null, nodePlayer.get().getLastName(),minute, pts, ast, oreb, dreb, stl,
+                                turno, fga, fgm, threepa, threepm, fta, ftm, nodePlayer.get(), team, game);
                         gamePlayerList.add(nodeGamePlayer);
                     }
                 }
