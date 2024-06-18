@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.project.legm.db.*;
 import org.project.legm.dbpojos.*;
-import org.project.legm.pojos.Position;
 import org.project.legm.pojos.PyRequest;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -56,7 +55,6 @@ public class GmService {
     private final GmMapping gmMapping;
 
     private final List<Team> teamList = new ArrayList<>();
-    private final List<Country> countryList = new ArrayList<>();
     @Getter
     private final List<Player> playerList = new ArrayList<>();
     private final List<Game> gamesList = new ArrayList<>();
@@ -122,6 +120,7 @@ public class GmService {
 
     public List<Player> fetchPlayers(GmUser gmUser) {
         InputStream is = GmService.class.getResourceAsStream("/playerRatings.json");
+        InputStream is2k = GmService.class.getResourceAsStream("/2kRatings.json");
         //log.info("All Teams: " + teamList.stream().map(Team::getTeamID).toList());
         List<Team> lTeamList = teamRepo.findAll();
         try {
@@ -138,6 +137,24 @@ public class GmService {
                     }
                 }
             }
+            JsonNode rootNode2k = mapper.readTree(is2k);
+            if (rootNode2k.isArray()){
+                for (JsonNode itemNode : rootNode2k){
+                    String firstName = itemNode.get("FIRST_NAME").asText();
+                    String lastName = itemNode.get("LAST_NAME").asText();
+                    Optional<Player> nodePlayer = playerList.stream()
+                            .filter(p -> p.getFirstName().equals(firstName) && p.getLastName().equals(lastName)).findFirst();
+
+                    if (nodePlayer.isPresent()){
+                        playerList.remove(nodePlayer.get());
+                        if (gmMapping.mapPlayer2k(nodePlayer.get(), itemNode).getFinishing() == null){
+                            log.info("player: " + gmMapping.mapPlayer2k(nodePlayer.get(), itemNode));
+                        }
+                        playerList.add(gmMapping.mapPlayer2k(nodePlayer.get(), itemNode));
+                    }
+                }
+            }
+
             for (Team team : lTeamList) {
                 String playerUri = "https://api-nba-v1.p.rapidapi.com/players?season=2023&team=";
                 Mono<String> responsePlayers = webClient.get()

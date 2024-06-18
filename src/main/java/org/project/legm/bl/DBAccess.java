@@ -26,7 +26,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 public class DBAccess {
-    private final CountryRepository countryRepo;
     private final GmUserRepository gmUserRepo;
     private final GamePlayerRepository gamePlayerRepo;
     private final GameRepository gameRepo;
@@ -38,15 +37,9 @@ public class DBAccess {
 
     public Boolean initSave(GmUser gmUser){
         try {
-            //TODO: Find working Countries API
-            //countryRepo.saveAll(gmService.fetchCountries());
             gmUser = gmUserRepo.save(gmUser);
             teamRepo.saveAll(gmService.fetchTeams(gmUser));
             playerRepo.saveAll(gmService.fetchPlayers(gmUser));
-            log.info("Size: " + gmService.getPlayerTeamList().size());
-            //log.info("list: " + gmService.getPlayerTeamList());
-            log.info("PSize: " + gmService.getPlayerList().size());
-            //log.info("Plist: " + gmService.getPlayerList());
             playerTeamRepo.saveAll(gmService.getPlayerTeamList());
             gameRepo.saveAll(gmService.fetchGames(gmUser));
             gamePlayerRepo.saveAll(gmService.fetchGamePlayers());
@@ -103,8 +96,8 @@ public class DBAccess {
             });
 
             PyRequest requestBody = new PyRequest(
-                    new PyTeam(homeTeam.get() ,homeTeam.get().getName(), homeTeam.get().getCode(), homePyPlayers),
-                    new PyTeam(homeTeam.get() ,awayTeam.get().getName(), awayTeam.get().getCode(), awayPyPlayers));
+                    new PyTeam(homeTeam.get(), homeTeam.get().getName(), homeTeam.get().getCode(), homePyPlayers),
+                    new PyTeam(awayTeam.get(), awayTeam.get().getName(), awayTeam.get().getCode(), awayPyPlayers));
 
             Game game = gmService.fetchSimulation(requestBody, userID, gameDate, location);
 

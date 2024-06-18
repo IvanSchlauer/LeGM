@@ -3,7 +3,6 @@ package org.project.legm.dbpojos;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import org.project.legm.pojos.Position;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -51,18 +50,16 @@ public class Player {
     private Integer offIQ;
     private Integer defIQ;
     private Integer Intangibles;
-    private Position position;
+    private String position;
     private String college;
+    private String country;
+    private String jersey;
+    private String image;
 
     @ManyToOne
     @JoinColumn(name = "injury_id")
     private Injury injury;
-    @ManyToOne
-    @JoinColumn(name = "country_id")
-    private Country country;
-    /*@OneToMany(mappedBy = "player", fetch = FetchType.EAGER)
-    @ToString.Exclude
-    private List<PlayerTeam> playerTeamList = new ArrayList<>();*/
+
     @OneToMany(mappedBy = "player", fetch = FetchType.EAGER)
     @ToString.Exclude
     @JsonIgnore
