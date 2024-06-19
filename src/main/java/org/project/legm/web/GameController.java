@@ -40,8 +40,14 @@ public class GameController {
     private ResponseEntity<List<GamePlayer>> getGamePlayers
             (@RequestParam(name = "game") Long gameID,
              @RequestParam(name = "team") Long teamID,
+             @RequestParam(name = "player", required = false) Long playerID,
              @RequestParam(name = "user") Long userID){
-        return dbAccess.getPlayersByGame(gameID, teamID, userID)
+        if (playerID == null){
+            return dbAccess.getPlayersByGame(gameID, teamID, userID)
+                    .map(ResponseEntity::ok)
+                    .orElseGet(() -> ResponseEntity.status(404).build());
+        }
+        return dbAccess.getPlayerByGameAndGP(gameID, teamID, playerID, userID)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(404).build());
     }

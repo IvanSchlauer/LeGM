@@ -43,9 +43,10 @@ public interface PlayerTeamRepository extends JpaRepository<PlayerTeam, PlayerTe
     @Query("""
             SELECT t
             FROM PlayerTeam pt INNER JOIN Team t ON pt.teamID = t.teamID
-            WHERE pt.playerID = :playerID AND pt.startDate <= :date AND pt.endDate IS NULL OR pt.endDate >= :date
+            WHERE pt.playerID = :playerID AND pt.startDate <= :date AND pt.endDate IS NULL OR pt.endDate >= :date 
+                  AND pt.userID = :userID
             """)
-    Team getTeamPlayedForByDate(Long playerID, LocalDate date);
+    Team getTeamPlayedForByDate(Long playerID, LocalDate date, Long userID);
 
     @Query("""
             SELECT pt

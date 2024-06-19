@@ -271,7 +271,8 @@ public class GmService {
                             Optional<Game> game = gameRepo.findById(gameID);
 
                             if (game.isPresent()) {
-                                Team team = playerTeamRepo.getTeamPlayedForByDate(player.getPlayerID(), game.get().getDate());
+                                Team team = playerTeamRepo
+                                        .getTeamPlayedForByDate(player.getPlayerID(), game.get().getDate(), player.getUserID());
                                 GamePlayer gp = new GamePlayer(null, player.getLastName(),min, pts, ast, oreb, dreb, stl, turno, fga, fgm,
                                         threepa, threepm, fta, ftm, player, team, game.get());
                                 //log.info("Gameplayer: " + gp);
@@ -326,7 +327,7 @@ public class GmService {
 
                     if (nodePlayer.isPresent()){
                         Team team = playerTeamRepo.getTeamPlayedForByDate(
-                                nodePlayer.get().getPlayerID(), game.getDate());
+                                nodePlayer.get().getPlayerID(), game.getDate(), userID);
                         GamePlayer nodeGamePlayer = new GamePlayer(null, nodePlayer.get().getLastName(),minute, pts, ast, oreb, dreb, stl,
                                 turno, fga, fgm, threepa, threepm, fta, ftm, nodePlayer.get(), team, game);
                         gamePlayerList.add(nodeGamePlayer);
@@ -356,7 +357,7 @@ public class GmService {
 
                     if (nodePlayer.isPresent()){
                         Team team = playerTeamRepo.getTeamPlayedForByDate(
-                                nodePlayer.get().getPlayerID(), game.getDate());
+                                nodePlayer.get().getPlayerID(), game.getDate(), userID);
                         GamePlayer nodeGamePlayer = new GamePlayer(null, nodePlayer.get().getLastName(),minute, pts, ast, oreb, dreb, stl,
                                 turno, fga, fgm, threepa, threepm, fta, ftm, nodePlayer.get(), team, game);
                         gamePlayerList.add(nodeGamePlayer);

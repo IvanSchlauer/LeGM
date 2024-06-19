@@ -26,6 +26,13 @@ public interface GamePlayerRepository extends JpaRepository<GamePlayer, Long> {
     @Query("""
             SELECT gp
             FROM game_player gp
+            WHERE gp.game.gameID = :gameID AND gp.game.awayTeam.userID = :userID
+            AND gp.team.teamID = :teamID AND gp.player.playerID = :playerID""")
+    List<GamePlayer> getGamePlayersByGameAndGP(Long gameID, Long teamID, Long playerID, Long userID);
+
+    @Query("""
+            SELECT gp
+            FROM game_player gp
             WHERE gp.player.playerID = :playerID AND gp.player.userID = :userID""")
     List<GamePlayer> getGamePlayerByPlayer(Long playerID, Long userID);
 

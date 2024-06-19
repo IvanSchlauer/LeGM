@@ -121,4 +121,8 @@ public class DBAccess {
     public Optional<List<GamePlayer>> getPlayersByGame(Long gameID, Long teamID, Long userID){
         return Optional.ofNullable(gamePlayerRepo.getGamePlayersByGame(gameID, teamID, userID)).filter(list -> !list.isEmpty());
     }
+
+    public Optional<List<GamePlayer>> getPlayerByGameAndGP(Long gameID, Long teamID, Long playerID, Long userID){
+        return Optional.ofNullable(gamePlayerRepo.getGamePlayersByGameAndGP(gameID, teamID, playerID, userID)).filter(list -> !list.isEmpty());
+    }
 }
