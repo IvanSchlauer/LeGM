@@ -44,7 +44,6 @@ public class GamePlayer {
             @JoinColumn(name = "player_id", referencedColumnName = "player_id"),
             @JoinColumn(name = "player_user_id", referencedColumnName = "user_id")
     })
-    @JsonIgnore
     private Player player;
 
     @ManyToOne
