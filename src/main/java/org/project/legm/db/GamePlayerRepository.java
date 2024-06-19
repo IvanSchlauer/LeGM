@@ -20,7 +20,7 @@ public interface GamePlayerRepository extends JpaRepository<GamePlayer, Long> {
             SELECT gp
             FROM game_player gp
             WHERE gp.game.gameID = :gameID AND gp.game.awayTeam.userID = :userID
-            AND gp.game.awayTeam.teamID = :teamID OR gp.game.homeTeam.teamID = :teamID""")
+            AND gp.team.teamID = :teamID""")
     List<GamePlayer> getGamePlayersByGame(Long gameID, Long teamID, Long userID);
 
     @Query("""

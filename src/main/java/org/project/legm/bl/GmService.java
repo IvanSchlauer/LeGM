@@ -144,7 +144,7 @@ public class GmService {
                     String firstName = itemNode.get("FIRST_NAME").asText();
                     String lastName = itemNode.get("LAST_NAME").asText();
                     Optional<Player> nodePlayer = playerList.stream()
-                            .filter(p -> p.getFirstName().equals(firstName) && p.getLastName().equals(lastName)).findFirst();
+                            .filter(p -> p.getFirstName().matches(firstName) && p.getLastName().matches(lastName)).findFirst();
 
                     if (nodePlayer.isPresent()){
                         playerList.remove(nodePlayer.get());
@@ -189,6 +189,7 @@ public class GmService {
         }catch (IOException e) {
             throw new RuntimeException(e);
         }
+        playerList.removeIf(p -> p.getFinishing() == null);
 
         return playerList;
     }
@@ -235,10 +236,8 @@ public class GmService {
     }
 
     public List<GamePlayer> fetchGamePlayers() {
-        int rateLimit = 0;
         List<Player> lPlayerList = playerRepo.findAll();
         for (Player player : lPlayerList) {
-            if (rateLimit < 6) {
                 log.info("Accessing statistics endpoint for Player: " + player.getFirstName() + " " + player.getPlayerID());
                 String statisticsUri = "https://api-nba-v1.p.rapidapi.com/players/statistics?season=2023&id=";
                 Mono<String> responseTeams = webClient.get()
@@ -283,9 +282,6 @@ public class GmService {
                 } catch (JsonProcessingException | NoSuchElementException e) {
                     throw new RuntimeException(e);
                 }
-
-                rateLimit++;
-            }
         }
         return gamePlayerList;
     }
